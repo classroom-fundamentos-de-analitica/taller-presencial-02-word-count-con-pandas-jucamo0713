@@ -41,7 +41,7 @@ def count_words(dataframe: DataFrame) -> DataFrame:
 
 
 def save_output(dataframe: DataFrame, output_filename: str) -> None:
-    dataframe.to_csv(output_filename, sep='\t')
+    dataframe.to_csv(output_filename, sep='\t', header=False)
 
 
 #
