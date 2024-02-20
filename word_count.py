@@ -1,7 +1,6 @@
 """Taller evaluable"""
 
 import glob
-import re
 
 import pandas as pd
 from pandas import DataFrame
@@ -10,7 +9,7 @@ from pandas import DataFrame
 def load_input(input_directory: str) -> DataFrame:
     filenames = glob.glob(input_directory + '/*.*')
     dataframes = [
-        pd.read_csv(filename, sep='§', index_col=None, names=['text'])
+        pd.read_csv(filename, sep=';', index_col=None, names=['text'])
         for
         filename in filenames
     ]
@@ -19,26 +18,30 @@ def load_input(input_directory: str) -> DataFrame:
 
 
 def clean_text(dataframe: DataFrame):
-    """Text cleaning"""
-    #
-    # Elimine la puntuación y convierta el texto a minúsculas.
-    #
-
     dataframe = dataframe.copy()
-    dataframe = dataframe['text'].replace(r'[\.,\/#!$%\^&\*;:{}=\-_`~()\['
-                                          r'\]]', '',
-                                          regex=True).apply(str.lower).apply(
-        str.strip)
+    dataframe['text'] = dataframe['text'].replace(
+        r'[\.,\/#!$%\^&\*;:{}=\_`~(#)\[\]]',
+        '',
+        regex=True).apply(str.lower).apply(str.strip)
     return dataframe
 
 
 def count_words(dataframe: DataFrame) -> DataFrame:
-    pass
+    dataframe = dataframe.copy()
+    dataframe['text'] = dataframe['text'].str.split(' ')
+    dataframe = dataframe.explode('text').reset_index(drop=True)
+    dataframe = dataframe.rename(columns={'text': 'word'})
+    dataframe['count'] = 1
+    dataframe = dataframe.groupby(['word']).agg(
+        {
+            'count': 'sum'
+        }
+    )
+    return dataframe
 
 
 def save_output(dataframe: DataFrame, output_filename: str) -> None:
-    pass
-    """Save output to a file."""
+    dataframe.to_csv(output_filename, sep='\t')
 
 
 #
@@ -47,7 +50,6 @@ def save_output(dataframe: DataFrame, output_filename: str) -> None:
 def run(input_directory, output_filename):
     dataframe = load_input(input_directory)
     dataframe = clean_text(dataframe)
-    print(dataframe)
     dataframe = count_words(dataframe)
     save_output(dataframe, output_filename)
 
